@@ -42,6 +42,7 @@ int historyCount = 0;
 unsigned long lastScrollTime = 0;
 int scrollIndex = 0;
 unsigned long firstFinishTime = 0;
+unsigned long firstFinishTime = 0;
 
 struct RaceResult { float t[4]; };
 RaceResult history[ MAX_HISTORY ];
@@ -104,6 +105,7 @@ void loop() {
     if (armed && !isRacing) {
       startTime = now; isRacing = true; armed = false;
       firstFinishTime = 0;
+      firstFinishTime = 0;
       showScreen("GO!", "Racing...", "");
     } else if (!isRacing) {
       armed = true; 
@@ -130,6 +132,11 @@ void loop() {
           firstFinishTime = now;
         }
 
+        // Track first finish time for timeout
+        if (firstFinishTime == 0) {
+          firstFinishTime = now;
+        }
+
         // Winner LED logic
         bool firstToFinish = true;
         for(int j=0; j<4; j++) { if(j != i && laneFinished[j]) firstToFinish = false; }
@@ -142,6 +149,8 @@ void loop() {
       showScreen("FINISHING...", "L1:" + String(laneTimes[0]/1000.0,1), "L2:" + String(laneTimes[1]/1000.0,1));
     }
 
+    // End race if all finished OR 5 seconds after first finish
+    if (finishedCount == 4 || (firstFinishTime > 0 && (now - firstFinishTime > 5000))) {
     // End race if all finished OR 5 seconds after first finish
     if (finishedCount == 4 || (firstFinishTime > 0 && (now - firstFinishTime > 5000))) {
       isRacing = false;
@@ -165,6 +174,7 @@ void loop() {
 
   // --- SCROLL RESULTS DISPLAY ---
   if (!isRacing && !armed) {
+    if (now - lastScrollTime > 2000) {
     if (now - lastScrollTime > 2000) {
       scrollIndex = (scrollIndex + 1) % 2;
       lastScrollTime = now;
