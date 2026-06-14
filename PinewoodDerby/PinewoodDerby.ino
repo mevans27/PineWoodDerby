@@ -10,18 +10,22 @@
 
 // --- PIN MAPPING ---
 #define START_PIN D8  // Start Gate Sensor
-#define L1_PIN    D0  // Lane 1 Sensor
-#define L2_PIN    D5  // Lane 2 Sensor
-#define L3_PIN    D6  // Lane 3 Sensor
-#define L4_PIN    D7  // Lane 4 Sensor
+NEW SKETCH
 
-#define LED1_PIN  D3  // Lane 1 LED
-#define LED2_PIN  D4  // Lane 2 LED
-#define LED3_PIN  3   // Lane 3 LED (TX Pin)
-#define LED4_PIN  1   // Lane 4 LED (RX Pin)
+#define L4_PIN    D0  // Lane 1 Sensor
+#define L3_PIN    D5  // Lane 2 Sensor
+#define L2_PIN    D6  // Lane 3 Sensor
+#define L1_PIN    D7  // Lane 4 Sensor
 
+#define LED4_PIN  D3  // Lane 1 LED
+#define LED3_PIN  D4  // Lane 2 LED
+#define LED2_PIN  3   // Lane 3 LED (TX Pin)
+#define LED1_PIN  1   // Lane 4 LED (RX Pin)
+
+// --- Other Globals ---
 #define X_OFF 32
 #define Y_OFF 16
+#define MAX_HISTORY  50
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 ESP8266WebServer server(80);
@@ -40,7 +44,7 @@ int scrollIndex = 0;
 unsigned long firstFinishTime = 0;
 
 struct RaceResult { float t[4]; };
-RaceResult history[10];
+RaceResult history[ MAX_HISTORY ];
 
 void handleCSV() {
   String csv = "Race,L1,L2,L3,L4,Winner\n";
@@ -139,7 +143,7 @@ void loop() {
     }
 
     // End race if all finished OR 5 seconds after first finish
-    if (finishedCount == 4 || (firstFinishTime > 0 && (now - firstFinishTime > 20000))) {
+    if (finishedCount == 4 || (firstFinishTime > 0 && (now - firstFinishTime > 5000))) {
       isRacing = false;
       
       // Fill unfinished lanes with 99.999
@@ -150,7 +154,7 @@ void loop() {
         }
       }
       
-      if (historyCount < 10) {
+      if (historyCount < MAX_HISTORY) {
         for(int i=0; i<4; i++) history[historyCount].t[i] = laneTimes[i]/1000.0;
         historyCount++;
       }
